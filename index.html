@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AZ-Kvíz: Literární žánry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700;900&family=Playfair+Display:wght@400;700;900&display=swap');
+
+        :root {
+            --book-dark: #1e293b;
+            --book-primary: #334155;
+            --paper-bg: #f8f5f0;
+            --p1-color: #1e40af; /* Tým Poezie - inkoustová */
+            --p2-color: #991b1b; /* Tým Próza - vínová */
+            --ink: #0f172a;
+        }
+
+        body {
+            background-color: var(--paper-bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20h60v60H20z' fill='none' stroke='%23e2e8f0' stroke-width='0.5'/%3E%3C/svg%3E");
+            font-family: 'Crimson Pro', serif;
+            color: var(--ink);
+            overflow-x: hidden;
+        }
+
+        h1, h2, .modern-font {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .hexagon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            padding: 20px;
+        }
+
+        .hex-row {
+            display: flex;
+            justify-content: center;
+            margin-top: -12px;
+        }
+
+        .hex-outline {
+            width: 58px;
+            height: 64px;
+            background-color: #e2e8f0;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+            transition: all 0.3s;
+        }
+
+        .hexagon {
+            width: 52px;
+            height: 58px;
+            background-color: #ffffff;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .hexagon:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.05);
+        }
+
+        /* Týmy */
+        .player1 .hexagon { background-color: var(--p1-color); color: white; }
+        .player2 .hexagon { background-color: var(--p2-color); color: white; }
+        .neutral .hexagon { background-color: #475569; color: #f1f5f9; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .question-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border-top: 8px solid var(--book-primary);
+        }
+
+        .btn-option {
+            width: 100%;
+            text-align: left;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background-color: #fff;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-option:hover {
+            background-color: #f8fafc;
+            border-color: var(--book-primary);
+            padding-left: 1.5rem;
+        }
+
+        .status-pill {
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-5xl main-card">
+        <header class="bg-white p-6 border-b flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-slate-800 text-white rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 uppercase">Literární <span class="text-blue-800">Žánry</span></h1>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Souboj perem a inkoustem</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div id="p1-ui" class="flex flex-col items-center transition-all">
+                    <span class="status-pill bg-blue-800 text-white mb-2">Tým Poezie</span>
+                    <div class="h-1 w-12 bg-blue-800"></div>
+                </div>
+                <div id="p2-ui" class="flex flex-col items-center transition-all opacity-30">
+                    <span class="status-pill bg-red-800 text-white mb-2">Tým Próza</span>
+                    <div class="h-1 w-12 bg-red-800"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 bg-white">
+            <div class="lg:col-span-3 hexagon-container bg-slate-50/50" id="board"></div>
+            
+            <div class="lg:col-span-2 flex flex-col p-8 justify-between border-l border-slate-100">
+                <div>
+                    <h3 class="text-slate-400 text-[10px] uppercase font-bold mb-1">Aktuální kapitola:</h3>
+                    <div id="status-display" class="text-3xl font-black mb-6 modern-font uppercase italic">Načítám...</div>
+                    
+                    <div class="p-5 bg-amber-50 rounded-xl border border-amber-100">
+                        <p class="text-xs text-amber-900 leading-relaxed">
+                            <strong>Cíl hry:</strong> Propojte všechny tři strany pyramidy svými políčky. Správná odpověď pole získá, špatná jej zablokuje pro oba hráče.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-8 space-y-2">
+                    <button onclick="switchPlayer()" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold transition-all text-xs uppercase tracking-widest">Vynechat tah</button>
+                    <button onclick="confirmReset()" class="w-full py-2 text-slate-400 hover:text-red-600 text-[9px] uppercase font-bold tracking-widest transition-colors">Restartovat knihovnu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz-modal" class="modal">
+        <div class="question-card">
+            <h2 id="question-text" class="text-xl font-bold mb-6 leading-tight text-slate-900"></h2>
+            <div id="options-grid" class="grid grid-cols-1 gap-2"></div>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <div class="bg-white p-10 rounded-lg text-center shadow-2xl max-w-sm w-full border-t-8 border-slate-800">
+            <div class="text-5xl mb-4">🏆</div>
+            <h2 class="text-2xl font-black mb-2 modern-font uppercase" id="win-title">VÍTĚZ!</h2>
+            <p id="win-text" class="mb-6 text-slate-600 italic"></p>
+            <button onclick="resetGame()" class="w-full py-4 bg-slate-800 text-white rounded font-bold hover:bg-black transition-all uppercase tracking-widest">Nová kapitola</button>
+        </div>
+    </div>
+
+    <script>
+        const AudioEngine = {
+            ctx: null, muted: false,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playTone(freq, type, duration, vol = 0.08) {
+                if (this.muted) return; this.init();
+                const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            correct() { this.playTone(523, 'sine', 0.3); },
+            wrong() { this.playTone(200, 'sawtooth', 0.2, 0.03); },
+            win() { [523, 659, 783, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5), i * 150)); }
+        };
+
+        const questions = [
+            { q: "Který žánr využívá personifikovaná zvířata a končí ponaučením?", a: "Bajka", o: ["Epos", "Bajka", "Povídka", "Mýtus"] },
+            { q: "Jak se nazývá lyricko-epická báseň s tragickým dějem?", a: "Balada", o: ["Óda", "Balada", "Elegie", "Sonet"] },
+            { q: "Který žánr je rozsáhlé epické vyprávění ve verších o hrdinských činech?", a: "Epos", o: ["Epos", "Román", "Legenda", "Novela"] },
+            { q: "Jak říkáme básni o 14 verších rozdělených do dvou kvartet a dvou terciet?", a: "Sonet", o: ["Haiku", "Sonet", "Balada", "Žalm"] },
+            { q: "Který žánr se soustředí na napětí a vyšetřování zločinu?", a: "Detektivka", o: ["Horor", "Detektivka", "Thriller", "Western"] },
+            { q: "Co je to 'Fantasy'?", a: "Žánr s magií a nadpřirozenými bytostmi", o: ["Vědecký popis vesmíru", "Žánr s magií a nadpřirozenými bytostmi", "Historická biografie", "Báseň o přírodě"] },
+            { q: "Který žánr zesměšňuje lidské vlastnosti nebo společenské poměry?", a: "Satira", o: ["Tragédie", "Satira", "Óda", "Elegie"] },
+            { q: "Jak nazýváme text určený pro divadelní představení?", a: "Drama", o: ["Próza", "Drama", "Epická báseň", "Fejeton"] },
+            { q: "Který krátký útvar vtipně reaguje na aktuální téma v novinách?", a: "Fejeton", o: ["Román", "Fejeton", "Epos", "Kronika"] },
+            { q: "Co je hlavním znakem 'Sci-fi'?", a: "Vliv vědy a techniky na budoucnost", o: ["Mluvící zvířata", "Vliv vědy a techniky na budoucnost", "Pohádkový svět", "Milostná zápletka"] },
+            { q: "Který žánr vypráví o životech svatých?", a: "Legenda", o: ["Pověst", "Legenda", "Mýtus", "Bajka"] },
+            { q: "Jak se nazývá smutná báseň vyjadřující žal nad ztrátou?", a: "Elegie", o: ["Elegie", "Óda", "Epigram", "Pásmo"] },
+            { q: "Který epický žánr má střední rozsah a překvapivý závěr?", a: "Novela", o: ["Román", "Novela", "Povídka", "Epos"] },
+            { q: "Co je to 'Pověst'?", a: "Lidové vyprávění s historickým jádrem", o: ["Lidové vyprávění s historickým jádrem", "Příběh o bozích", "Vědecká studie", "Deníkový záznam"] },
+            { q: "Který žánr je krátký, úsečný a satirický (často jen pár veršů)?", a: "Epigram", o: ["Epigram", "Elegie", "Epos", "Sonet"] },
+            { q: "Jak se nazývá báseň oslavující nějakou osobu nebo vlast?", a: "Óda", o: ["Óda", "Epitaf", "Elegie", "Balada"] },
+            { q: "Který žánr se zabývá vznikem světa a bohy?", a: "Mýtus", o: ["Pohádka", "Mýtus", "Pověst", "Kronika"] },
+            { q: "Jak říkáme nápisu na hrob v básnické formě?", a: "Epitaf", o: ["Epitaf", "Epigram", "Elegie", "Óda"] },
+            { q: "Který literární druh nemá děj a vyjadřuje pocity?", a: "Lyrika", o: ["Epika", "Lyrika", "Drama", "Próza"] },
+            { q: "Co je to 'Horor'?", a: "Žánr vyvolávající strach a děs", o: ["Vtipné vyprávění", "Žánr vyvolávající strach a děs", "Příručka o vaření", "Historický román"] },
+            { q: "Jak se jmenuje nejrozsáhlejší moderní epický žánr?", a: "Román", o: ["Povídka", "Novela", "Román", "Črta"] },
+            { q: "Který žánr je určen dětem a vítězí v něm dobro nad zlem?", a: "Pohádka", o: ["Pohádka", "Mýtus", "Horor", "Satira"] },
+            { q: "Co je typické pro 'Western'?", a: "Prostředí Divokého západu", o: ["Prostředí Divokého západu", "Lety do vesmíru", "Středověké hrady", "Podmořský svět"] },
+            { q: "Jak se nazývá záznam událostí v časovém sledu?", a: "Kronika", o: ["Kronika", "Epos", "Román", "Legenda"] },
+            { q: "Který žánr je humorné drama se šťastným koncem?", a: "Komedie", o: ["Tragédie", "Komedie", "Činohra", "Groteska"] }
+        ];
+
+        let currentPlayer = 1;
+        let boardState = Array(28).fill(null);
+        let usedQuestions = [];
+
+        const adj = [[1, 2], [0, 2, 3, 4], [0, 1, 4, 5], [1, 4, 6, 7], [1, 2, 3, 5, 7, 8], [2, 4, 8, 9], [3, 7, 10, 11], [3, 4, 6, 8, 11, 12], [4, 5, 7, 9, 12, 13], [5, 8, 13, 14], [6, 11, 15, 16], [6, 7, 10, 12, 16, 17], [7, 8, 11, 13, 17, 18], [8, 9, 12, 14, 18, 19], [9, 13, 19, 20], [10, 16, 21, 22], [10, 11, 15, 17, 22, 23], [11, 12, 16, 18, 23, 24], [12, 13, 17, 19, 24, 25], [13, 14, 18, 20, 25, 26], [14, 19, 26, 27], [15, 22], [15, 16, 21, 23], [16, 17, 22, 24], [17, 18, 23, 25], [18, 19, 24, 26], [19, 20, 25, 27], [20, 26]];
+        const sideLeft = [0, 1, 3, 6, 10, 15, 21];
+        const sideRight = [0, 2, 5, 9, 14, 20, 27];
+        const sideBottom = [21, 22, 23, 24, 25, 26, 27];
+
+        function createBoard() {
+            const container = document.getElementById('board');
+            container.innerHTML = ''; let id = 0;
+            for (let r = 1; r <= 7; r++) {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'hex-row';
+                for (let c = 0; c < r; c++) {
+                    const outline = document.createElement('div');
+                    outline.className = 'hex-outline';
+                    outline.id = `out-${id}`;
+                    const hex = document.createElement('div');
+                    hex.className = 'hexagon';
+                    hex.innerText = id + 1;
+                    const cid = id;
+                    hex.onclick = () => onHexClick(cid);
+                    outline.appendChild(hex); rowEl.appendChild(outline);
+                    id++;
+                }
+                container.appendChild(rowEl);
+            }
+            updateUI();
+        }
+
+        function onHexClick(idx) {
+            if (boardState[idx] !== null && boardState[idx] !== 0) return;
+            showQuiz(idx);
+        }
+
+        function showQuiz(idx) {
+            const modal = document.getElementById('quiz-modal');
+            const qTxt = document.getElementById('question-text');
+            const optGrid = document.getElementById('options-grid');
+
+            if (usedQuestions.length >= questions.length) usedQuestions = [];
+            let q; do { q = questions[Math.floor(Math.random() * questions.length)]; } while (usedQuestions.includes(q));
+            usedQuestions.push(q);
+
+            qTxt.innerText = q.q;
+            optGrid.innerHTML = '';
+
+            const opts = [...q.o].sort(() => Math.random() - 0.5);
+            opts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option";
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    const outline = document.getElementById(`out-${idx}`);
+                    if (opt === q.a) {
+                        AudioEngine.correct();
+                        boardState[idx] = currentPlayer;
+                        outline.className = `hex-outline player${currentPlayer}`;
+                        if (checkWin(currentPlayer)) return showWin(currentPlayer);
+                    } else {
+                        AudioEngine.wrong();
+                        boardState[idx] = 0;
+                        outline.className = `hex-outline neutral`;
+                    }
+                    modal.style.display = 'none';
+                    switchPlayer();
+                };
+                optGrid.appendChild(btn);
+            });
+            modal.style.display = 'flex';
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateUI();
+        }
+
+        function updateUI() {
+            const status = document.getElementById('status-display');
+            const ui1 = document.getElementById('p1-ui');
+            const ui2 = document.getElementById('p2-ui');
+
+            if (currentPlayer === 1) {
+                status.innerText = "Píše POEZIE";
+                status.style.color = "var(--p1-color)";
+                ui1.style.opacity = "1"; ui2.style.opacity = "0.2";
+            } else {
+                status.innerText = "Píše PRÓZA";
+                status.style.color = "var(--p2-color)";
+                ui2.style.opacity = "1"; ui1.style.opacity = "0.2";
+            }
+        }
+
+        function checkWin(p) {
+            const owned = boardState.map((v, i) => v === p ? i : null).filter(v => v !== null);
+            const startNodes = owned.filter(i => sideLeft.includes(i));
+            if (startNodes.length === 0) return false;
+            let visited = new Set(); let queue = [...startNodes];
+            startNodes.forEach(n => visited.add(n));
+            let touchR = false, touchB = false;
+            let head = 0;
+            while(head < queue.length) {
+                const curr = queue[head++];
+                if (sideRight.includes(curr)) touchR = true;
+                if (sideBottom.includes(curr)) touchB = true;
+                if (touchR && touchB) return true;
+                const neighbors = adj[curr];
+                if (neighbors) {
+                    for (const n of neighbors) {
+                        if (owned.includes(n) && !visited.has(n)) {
+                            visited.add(n); queue.push(n);
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function showWin(p) {
+            AudioEngine.win();
+            const modal = document.getElementById('win-modal');
+            const title = document.getElementById('win-title');
+            const text = document.getElementById('win-text');
+            title.innerText = p === 1 ? "POEZIE VÍTĚZÍ!" : "PRÓZA VÍTĚZÍ!";
+            text.innerText = "Vaše pero je mocnější než meč. Literární svět vám leží u nohou!";
+            modal.style.display = 'flex';
+        }
+
+        function confirmReset() {
+            if (confirm("Chcete smazat tento rukopis a začít znovu?")) resetGame();
+        }
+
+        function resetGame() {
+            boardState = Array(28).fill(null);
+            currentPlayer = 1;
+            usedQuestions = [];
+            document.getElementById('win-modal').style.display = 'none';
+            createBoard();
+        }
+
+        window.onload = createBoard;
+    </script>
+</body>
+</html>
